@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31321.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Api", "BDOLifeApi\BDOLife.Api.csproj", "{BF04DB3C-C8DC-4588-ADB5-B440F80A9DA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Application", "BDOLifeApi.Application\BDOLife.Application.csproj", "{9FF145E8-5990-4780-B112-7BC7AB56D891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Core", "BDOLifeApi.Core\BDOLife.Core.csproj", "{9FC43D96-496D-48C3-B09A-8CC55736C78F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Infra", "BDOLifeApi.Infra\BDOLife.Infra.csproj", "{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF04DB3C-C8DC-4588-ADB5-B440F80A9DA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF04DB3C-C8DC-4588-ADB5-B440F80A9DA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF04DB3C-C8DC-4588-ADB5-B440F80A9DA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF04DB3C-C8DC-4588-ADB5-B440F80A9DA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FF145E8-5990-4780-B112-7BC7AB56D891}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FF145E8-5990-4780-B112-7BC7AB56D891}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FF145E8-5990-4780-B112-7BC7AB56D891}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FF145E8-5990-4780-B112-7BC7AB56D891}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FC43D96-496D-48C3-B09A-8CC55736C78F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FC43D96-496D-48C3-B09A-8CC55736C78F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FC43D96-496D-48C3-B09A-8CC55736C78F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FC43D96-496D-48C3-B09A-8CC55736C78F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DF790EC5-55B0-4952-9ACF-FAB0FB1E3A90}
+	EndGlobalSection
+EndGlobal
