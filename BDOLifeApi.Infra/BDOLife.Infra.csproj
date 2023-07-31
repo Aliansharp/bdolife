@@ -30,4 +30,16 @@
     <Folder Include="Selenium\Files\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Selenium\ChromeDriver\chromedriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Selenium\EdgeDriver\msedgedriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Selenium\FirefoxDriver\geckodriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

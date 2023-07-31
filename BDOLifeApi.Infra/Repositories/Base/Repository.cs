@@ -28,6 +28,7 @@ namespace BDOLife.Infra.Repositories.Base
         public async Task AddBulkAsync(IList<T> entities)
         {
             await _dataContext.Set<T>().AddRangeAsync(entities);
+            await _dataContext.SaveChangesAsync();
         }
 
         public IQueryable<T> ApplySpecification(ISpecification<T> spec)
@@ -104,8 +105,10 @@ namespace BDOLife.Infra.Repositories.Base
         {
             foreach (var entity in entities)
             {
-                await UpdateAsync(entity);
+                _dataContext.Entry(entity).State = EntityState.Modified;
             }
+
+            await _dataContext.SaveChangesAsync();
         }
     }
 }

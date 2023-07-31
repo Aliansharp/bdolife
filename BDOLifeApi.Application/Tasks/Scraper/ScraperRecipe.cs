@@ -20,7 +20,7 @@ namespace BDOLife.Application.Tasks.Scraper
         public long? SubRecipeId { get; set; }
         public int Quantity { get; set; }
         public string RecipeType { get; set; }
-        public float Weight { get; set; }
+        public float? Weight { get; set; }
     }
 
     public class ScraperRecipeProduct

@@ -31,6 +31,7 @@ namespace BDOLife.Application.Tasks
         private readonly string _pathSaveDownloads = string.Empty;
         private readonly string _pathItems = string.Empty;
         private readonly string _pathMaterials = string.Empty;
+        private readonly string _pathNpc = string.Empty;
         private readonly string _pathRecipesAlchemy = string.Empty;
         private readonly string _pathRecipesCooking = string.Empty;
         private readonly string _pathRecipesProcess = string.Empty;
@@ -47,9 +48,11 @@ namespace BDOLife.Application.Tasks
             _materialGroupRepository = materialGroupRepository;
             _context = context;
 
-            _pathSaveDownloads = _configuration.GetSection("Selenium")["Save"];
+            var pathDriver = Path.Combine(AppContext.BaseDirectory, _configuration.GetSection("Selenium")["Edge"]);
+            _pathSaveDownloads = Path.Combine(AppContext.BaseDirectory, _configuration.GetSection("Selenium")["Save"]);
             _pathItems = _configuration.GetSection("Files")["Items"];
-            _pathMaterials = _configuration.GetSection("Files")["Materials"];
+            _pathMaterials = _configuration.GetSection("Files")["Materials:Base"];
+            _pathNpc = _configuration.GetSection("Files")["Materials:Npc"];
             _pathRecipesAlchemy = _configuration.GetSection("Files")["Recipes:Alchemy"];
             _pathRecipesCooking = _configuration.GetSection("Files")["Recipes:Cooking"];
             _pathRecipesProcess = _configuration.GetSection("Files")["Recipes:Process"];
@@ -82,12 +85,12 @@ namespace BDOLife.Application.Tasks
             edgeOptions.AddUserProfilePreference("profile.default_content_setting_values.automatic_downloads", 1);
             edgeOptions.AddUserProfilePreference("download.default_directory", _pathSaveDownloads);
 
-            _driver = new EdgeDriver(_configuration.GetSection("Selenium")["Edge"], edgeOptions);
+            _driver = new EdgeDriver(pathDriver, edgeOptions);
         }
 
         private void ClearFolderFiles()
         {
-            foreach (string file in Directory.GetFiles(_configuration.GetSection("Selenium")["Save"]))
+            foreach (string file in Directory.GetFiles(_pathSaveDownloads))
             {
                 try
                 {
@@ -101,7 +104,7 @@ namespace BDOLife.Application.Tasks
             }
         }
 
-        public void ExtractItensFromBDOCodex()
+        public void ExtractItemsFromBDOCodex()
         {
             try
             {
@@ -162,7 +165,7 @@ namespace BDOLife.Application.Tasks
                     var script = File.ReadAllText(path);
                     _driver.Navigate().GoToUrl(newLink);
                     Console.WriteLine($"Processing {newLink}");
-                    Thread.Sleep(5000);
+                    //Thread.Sleep(5000);
                     IJavaScriptExecutor driver = (IJavaScriptExecutor)this._driver;
                     driver.ExecuteScript(script);
                 }
@@ -235,20 +238,32 @@ namespace BDOLife.Application.Tasks
             }
         }
 
-        public async Task ExtractRecipeFull()
+        public async Task ProcessRecipeFull(RecipeTypeEnum type)
         {
-            var recipes = await _itemRepository.GetRecipesByType(RecipeTypeEnum.Process);
+            var recipes = await _itemRepository.GetRecipesByType(type);
+
+            var fileNamePattern = string.Empty;
+            switch (type)
+            {
+                case RecipeTypeEnum.Process:
+                    fileNamePattern = "mrecipe";
+                    break;
+                case RecipeTypeEnum.Alchemy:
+                case RecipeTypeEnum.Cooking:
+                    fileNamePattern = "recipe";
+                    break;
+            }
 
             foreach (var recipe in recipes)
             {
                 //var path = Path.Combine(AppContext.BaseDirectory, @"Tasks\Scraper\Files\Recipes\Full\Recipe\", $"recipe_{recipe.BDOReference}_{_defaultLanguage}.json");
-                var path = Path.Combine(AppContext.BaseDirectory, _pathRecipesFull, $"mrecipe_{recipe.BDOReference}_{_defaultLanguage}.json");
+                var path = Path.Combine(AppContext.BaseDirectory, _pathSaveDownloads, $"{fileNamePattern}_{recipe.BDOReference}_{_defaultLanguage}.json");
 
                 using (StreamReader file = File.OpenText(path))
                 {
                     var json = file.ReadToEnd();
                     var recipeBDOCodex = JsonConvert.DeserializeObject<ScraperRecipe>(json);
-                    var recipeDb = (Recipe)await _itemRepository.GetRecipeByReferenceAndType(recipeBDOCodex.Id.ToString(), RecipeTypeEnum.Process);
+                    var recipeDb = (Recipe)await _itemRepository.GetRecipeByReferenceAndType(recipeBDOCodex.Id.ToString(), type);
                     var index = 1;
 
                     foreach (var material in recipeBDOCodex.Materials)
@@ -366,41 +381,50 @@ namespace BDOLife.Application.Tasks
         public async Task Extract()
         {
             //ClearFolderFiles();
+            
+            //ExtractItemsFromBDOCodex();
+            //await ProcessItemsAsync();
 
-            ExtractItensFromBDOCodex();
-            //await ExtractItemsAsync();
-
-            //await ExtractRecipeProcessAsync();
-
-            //ExtractRecipesProcessFromBDOCodex();
-            //ExtractRecipesCookingAndAlchemyFromBDOCodex();
             //ExtractBasicMaterialsFromBDOCodex();
+            //await ProcessMaterialsAsync();
+            
+            //ExtractRecipesProcessFromBDOCodex();
+            //await ProcessRecipeAsync(RecipeTypeEnum.Process);
+
+            //ExtractRecipesCookingAndAlchemyFromBDOCodex();
+            //await ProcessRecipeAsync(RecipeTypeEnum.Cooking);
+            //await ProcessRecipeAsync(RecipeTypeEnum.Alchemy);
+
             //await ExtractRecipeFullBDOCodex();
 
-
-            await ExtractRecipeFull();
-
-
-            //await ExtractRecipeCookingAsync();
-            //await ExtractRecipeAlchemyAsync();
+            //await ProcessRecipeFull(RecipeTypeEnum.Process);
+            await ProcessRecipeFull(RecipeTypeEnum.Cooking);
+            await ProcessRecipeFull(RecipeTypeEnum.Alchemy);
         }
 
         public void MoveFiles()
         {
 
             var files = Directory.GetFiles(_configuration.GetSection("Selenium")["Save"]);
-            foreach(var file in files)
+            foreach (var file in files)
             {
-                if(file.Contains("items"))
-                {
+                var path = string.Empty;
+                var filename = Path.GetFileName(file);
 
-                }
+                if (file.Contains("items"))
+                    path = $"{_pathItems}{filename}";
+                else if (file.Contains("mrecipe"))
+                    path = $"{_pathRecipesFull}{filename}";
+                //else if(file.Contains("recipes"))
+                //    path = $"{_pathReci}
+
+                File.Move(file, path);
             }
         }
 
-        public async Task ExtractMaterialsAsync()
+        public async Task ProcessMaterialsAsync()
         {
-            if (!_disabled)
+            if (_disabled == false)
             {
 
                 try
@@ -503,7 +527,7 @@ namespace BDOLife.Application.Tasks
             }
         }
 
-        public async Task ExtractItemsAsync()
+        public async Task ProcessItemsAsync()
         {
             if (_disabled == false)
             {
@@ -667,7 +691,7 @@ namespace BDOLife.Application.Tasks
                     {
                         foreach (var lang in _languages.Select(l => l.ToLower()))
                         {
-                            var path = Path.Combine(AppContext.BaseDirectory, @"Tasks\Scraper\Files\Materials\NPC\", $"item_{material}_{lang}.json");
+                            var path = Path.Combine(AppContext.BaseDirectory, _pathNpc, $"item_{material}_{lang}.json");
                             using (StreamReader file = File.OpenText(path))
                             {
                                 var json = file.ReadToEnd();
@@ -748,204 +772,54 @@ namespace BDOLife.Application.Tasks
             }
         }
 
-        public async Task ExtractRecipeCookingAsync()
-        {
-            if (!_disabled)
-            {
 
-                try
-                {
-                    var cookingLanguages = new Dictionary<string, List<ScraperItem>>();
-                    foreach (var lang in _languages)
-                    {
-                        var path = Path.Combine(AppContext.BaseDirectory, _configuration.GetSection("Selenium")["Save"], $"recipes_{lang}.json");
-                        using (StreamReader file = File.OpenText(path))
-                        {
-                            var json = file.ReadToEnd();
-                            var mainList = JsonConvert.DeserializeObject<List<ScraperItem>>(json);
-                            mainList = mainList.OrderBy(m => m.BDOReference).ToList();
-                            cookingLanguages.Add(lang, mainList);
-                        }
-                    }
-
-                    foreach (var item in cookingLanguages[_defaultLanguage].Where(c => c.SubType == "Culinária"))
-                    {
-                        var newRecipe = new Recipe
-                        {
-                            Id = Guid.NewGuid(),
-                            BDOReference = item.BDOReference.ToString(),
-                            Name = item.Name,
-                            Visible = true,
-                            Type = Core.Enums.RecipeTypeEnum.Cooking,
-                            EXP = item.Exp
-                            //Product1 = item.Products != null && item.Products.Count >= 1 ? _itemRepository.Get
-                        };
-                        var newsTranslates = new List<ItemTranslate>();
-                        foreach (var lang in _languages)
-                        {
-                            if (lang != _defaultLanguage)
-                            {
-                                var translates = cookingLanguages[lang].ToList();
-                                var translate = translates.SingleOrDefault(t => t.BDOReference.ToString() == newRecipe.BDOReference);
-                                if (translate != null)
-                                {
-                                    newsTranslates.Add(new ItemTranslate
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        ItemId = newRecipe.Id,
-                                        NameTranslated = translate.Name,
-                                        Lang = lang
-                                    });
-                                }
-                            }
-                        }
-
-
-                        var recipeDB = await _itemRepository.GetByReference(newRecipe.BDOReference, nameof(Recipe), newRecipe.Type);
-                        if (recipeDB != null)
-                        {
-                            recipeDB.Name = newRecipe.Name;
-                            recipeDB.Image = newRecipe.Image;
-                            recipeDB.EXP = newRecipe.EXP;
-
-                            var translates = recipeDB.Translates.ToList();
-                            if (translates != null && translates.Count() != newsTranslates.Count())
-                            {
-                                newsTranslates = newsTranslates.Where(nt => !translates.Any(t => t.Lang == nt.Lang)).ToList();
-                                newsTranslates.ForEach(n => _context.Entry(n).State = Microsoft.EntityFrameworkCore.EntityState.Added);
-                                recipeDB.Translates.AddRange(newsTranslates);
-                            }
-                            else if (translates == null)
-                            {
-                                newsTranslates.ForEach(n => _context.Entry(n).State = Microsoft.EntityFrameworkCore.EntityState.Added);
-                                recipeDB.Translates = newsTranslates;
-                            }
-
-                            await _itemRepository.UpdateAsync(recipeDB);
-                        }
-                        else
-                        {
-                            newRecipe.Translates = newsTranslates;
-                            Console.WriteLine(newRecipe.Name);
-                            newRecipe = (Recipe)await _itemRepository.AddAsync(newRecipe);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
-            }
-        }
-
-        public async Task ExtractRecipeAlchemyAsync()
-        {
-            if (!_disabled)
-            {
-
-                try
-                {
-                    var cookingLanguages = new Dictionary<string, List<ScraperItem>>();
-                    foreach (var lang in _languages)
-                    {
-                        var path = Path.Combine(AppContext.BaseDirectory, _configuration.GetSection("Selenium")["Save"], $"recipes_{lang}.json");
-                        using (StreamReader file = File.OpenText(path))
-                        {
-                            var json = file.ReadToEnd();
-                            var mainList = JsonConvert.DeserializeObject<List<ScraperItem>>(json);
-                            mainList = mainList.OrderBy(m => m.BDOReference).ToList();
-                            cookingLanguages.Add(lang, mainList);
-                        }
-                    }
-
-                    foreach (var item in cookingLanguages[_defaultLanguage].Where(c => c.SubType == "Alquimia"))
-                    {
-                        var newRecipe = new Recipe
-                        {
-                            Id = Guid.NewGuid(),
-                            BDOReference = item.BDOReference.ToString(),
-                            Name = item.Name,
-                            Visible = true,
-                            Type = Core.Enums.RecipeTypeEnum.Alchemy,
-                            EXP = item.Exp,
-                        };
-                        var newsTranslates = new List<ItemTranslate>();
-                        foreach (var lang in _languages)
-                        {
-                            if (lang != _defaultLanguage)
-                            {
-                                var translates = cookingLanguages[lang].ToList();
-                                var translate = translates.SingleOrDefault(t => t.BDOReference.ToString() == newRecipe.BDOReference);
-                                if (translate != null)
-                                {
-                                    newsTranslates.Add(new ItemTranslate
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        ItemId = newRecipe.Id,
-                                        NameTranslated = translate.Name,
-                                        Lang = lang
-                                    });
-                                }
-                            }
-                        }
-
-                        var recipeDB = await _itemRepository.GetByReference(newRecipe.BDOReference, nameof(Recipe), RecipeTypeEnum.Alchemy);
-                        if (recipeDB != null)
-                        {
-                            recipeDB.Name = newRecipe.Name;
-                            recipeDB.Image = newRecipe.Image;
-                            recipeDB.EXP = newRecipe.EXP;
-
-                            var translates = recipeDB.Translates.ToList();
-                            if (translates != null && translates.Count() != newsTranslates.Count())
-                            {
-                                newsTranslates = newsTranslates.Where(nt => !translates.Any(t => t.Lang == nt.Lang)).ToList();
-                                newsTranslates.ForEach(n => _context.Entry(n).State = Microsoft.EntityFrameworkCore.EntityState.Added);
-                                recipeDB.Translates.AddRange(newsTranslates);
-                            }
-                            else if (translates == null)
-                            {
-                                newsTranslates.ForEach(n => _context.Entry(n).State = Microsoft.EntityFrameworkCore.EntityState.Added);
-                                recipeDB.Translates = newsTranslates;
-                            }
-
-                            await _itemRepository.UpdateAsync(recipeDB);
-                        }
-                        else
-                        {
-                            newRecipe.Translates = newsTranslates;
-                            Console.WriteLine(newRecipe.Name);
-                            newRecipe = (Recipe)await _itemRepository.AddAsync(newRecipe);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
-            }
-        }
-
-        public async Task ExtractRecipeProcessAsync()
+        public async Task ProcessRecipeAsync(RecipeTypeEnum type)
         {
             if (_disabled == false)
             {
                 try
                 {
-                    var cookingLanguages = new Dictionary<string, List<ScraperItem>>();
+                    var fileNamePattern = string.Empty;
+                    switch (type)
+                    {
+                        case RecipeTypeEnum.Process:
+                            fileNamePattern = "mrecipes";
+                            break;
+                        case RecipeTypeEnum.Alchemy:
+                        case RecipeTypeEnum.Cooking:
+                            fileNamePattern = "recipes";
+                            break;
+                    }
+
+                    var updatedRecipes = new List<ItemBase>();
+                    var addedRecipes = new List<ItemBase>();
+
+                    var languages = new Dictionary<string, List<ScraperItem>>();
                     foreach (var lang in _languages)
                     {
-                        var path = Path.Combine(AppContext.BaseDirectory, _configuration.GetSection("Selenium")["Save"], $"mrecipes_{lang}.json");
+                        var path = Path.Combine(AppContext.BaseDirectory, _pathSaveDownloads, $"{fileNamePattern}_{lang}.json");
                         using (StreamReader file = File.OpenText(path))
                         {
                             var json = file.ReadToEnd();
                             var mainList = JsonConvert.DeserializeObject<List<ScraperItem>>(json);
                             mainList = mainList.OrderBy(m => m.BDOReference).ToList();
-                            cookingLanguages.Add(lang, mainList);
+                            languages.Add(lang, mainList);
                         }
                     }
 
-                    foreach (var item in cookingLanguages[_defaultLanguage])
+                    var count = 0;
+
+                    var recipesDb = await _itemRepository.GetAsync(predicate: x => x.Discriminator == nameof(Recipe) && ((Recipe)x).Type == type, orderBy: null, includeString: nameof(Item.Translates), disableTracking: false);
+
+                    var query = languages[_defaultLanguage].AsQueryable();
+
+                    if (type == RecipeTypeEnum.Cooking)
+                        query = query.Where(x => x.SubType == "Culinária");
+
+                    if(type == RecipeTypeEnum.Alchemy)
+                        query = query.Where(x => x.SubType == "Alquimia");
+
+                    foreach (var item in query.ToList())
                     {
                         var newRecipe = new Recipe
                         {
@@ -953,7 +827,7 @@ namespace BDOLife.Application.Tasks
                             BDOReference = item.BDOReference.ToString(),
                             Name = item.Name,
                             Visible = true,
-                            Type = Core.Enums.RecipeTypeEnum.Process,
+                            Type = type,
                             EXP = item.Exp,
                             SubType = GetSubType(item.SubType),
                         };
@@ -963,7 +837,7 @@ namespace BDOLife.Application.Tasks
                         {
                             if (lang != _defaultLanguage)
                             {
-                                var translates = cookingLanguages[lang].ToList();
+                                var translates = languages[lang].ToList();
                                 var translate = translates.SingleOrDefault(t => t.BDOReference.ToString() == newRecipe.BDOReference);
                                 if (translate != null)
                                 {
@@ -978,52 +852,68 @@ namespace BDOLife.Application.Tasks
                             }
                         }
 
-                        var recipeDB = await _itemRepository.GetByReference(newRecipe.BDOReference, nameof(Recipe), RecipeTypeEnum.Process);
-                        if (recipeDB != null)
+                        var recipeDb = (Recipe)recipesDb.FirstOrDefault(x => x.BDOReference.Equals(newRecipe.BDOReference));
+
+                        if (recipeDb == null)
                         {
-                            var itemChanged = false;
+                            newRecipe.Translates = newsTranslates;
+                            addedRecipes.Add(newRecipe);
+                            Console.WriteLine($"{count} - {newRecipe.Name} (ADDED)");
+                        }
+                        else
+                        {
+                            var recipeChange = false;
 
-                            if (recipeDB.Name != newRecipe.Name)
+                            if (recipeDb.Name != newRecipe.Name)
                             {
-                                recipeDB.Name = newRecipe.Name;
-                                itemChanged = true;
+                                recipeDb.Name = newRecipe.Name;
+                                recipeChange = true;
                             }
 
-                            if (recipeDB.Image != newRecipe.Image)
+                            if (recipeDb.Image != newRecipe.Image)
                             {
-                                recipeDB.Image = newRecipe.Image;
-                                itemChanged = true;
+                                recipeDb.Image = newRecipe.Image;
+                                recipeChange = true;
                             }
 
-                            if (recipeDB.EXP != newRecipe.EXP)
+                            if (recipeDb.EXP != newRecipe.EXP)
                             {
-                                recipeDB.EXP = newRecipe.EXP;
-                                itemChanged = true;
+                                recipeDb.EXP = newRecipe.EXP;
+                                recipeChange = true;
                             }
 
-                            var translates = recipeDB.Translates.ToList();
+                            var translates = recipeDb.Translates.ToList();
                             if (translates != null && translates.Count() != newsTranslates.Count())
                             {
                                 newsTranslates = newsTranslates.Where(nt => !translates.Any(t => t.Lang == nt.Lang)).ToList();
                                 newsTranslates.ForEach(n => _context.Entry(n).State = Microsoft.EntityFrameworkCore.EntityState.Added);
-                                recipeDB.Translates.AddRange(newsTranslates);
-                                itemChanged = true;
-                            }
-                            else if (translates == null)
-                            {
-                                newsTranslates.ForEach(n => _context.Entry(n).State = Microsoft.EntityFrameworkCore.EntityState.Added);
-                                recipeDB.Translates = newsTranslates;
-                                itemChanged = true;
+                                recipeDb.Translates.AddRange(newsTranslates);
+                                recipeChange = true;
                             }
 
-                            await _itemRepository.UpdateAsync(recipeDB);
+                            if (recipeChange)
+                            {
+                                updatedRecipes.Add(recipeDb);
+                                Console.WriteLine($"{count} - {recipeDb.Name} (UPDATED)");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{count} - {newRecipe.Name} (NOT CHANGED)");
+                            }
                         }
-                        else
-                        {
-                            newRecipe.Translates = newsTranslates;
-                            Console.WriteLine(newRecipe.Name);
-                            newRecipe = (Recipe)await _itemRepository.AddAsync(newRecipe);
-                        }
+                        count++;
+                    }
+
+                    if (addedRecipes?.Count > 0)
+                    {
+                        await _itemRepository.AddBulkAsync(addedRecipes);
+                        Console.WriteLine($"TOTAL RECIPES ADDED: {addedRecipes.Count}");
+                    }
+
+                    if (updatedRecipes?.Count > 0)
+                    {
+                        await _itemRepository.UpdateBulkAsync(updatedRecipes);
+                        Console.WriteLine($"TOTAL RECIPES UPDATED: {updatedRecipes.Count}");
                     }
                 }
                 catch (Exception e)
