@@ -395,11 +395,11 @@ namespace BDOLife.Application.Tasks
             //await ProcessRecipeAsync(RecipeTypeEnum.Cooking);
             //await ProcessRecipeAsync(RecipeTypeEnum.Alchemy);
 
-            //await ExtractRecipeFullBDOCodex();
+            await ExtractRecipeFullBDOCodex();
 
             //await ProcessRecipeFull(RecipeTypeEnum.Process);
-            await ProcessRecipeFull(RecipeTypeEnum.Cooking);
-            await ProcessRecipeFull(RecipeTypeEnum.Alchemy);
+            //await ProcessRecipeFull(RecipeTypeEnum.Cooking);
+            //await ProcessRecipeFull(RecipeTypeEnum.Alchemy);
         }
 
         public void MoveFiles()

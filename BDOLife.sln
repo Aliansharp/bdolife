@@ -1,15 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31321.278
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Api", "BDOLifeApi\BDOLife.Api.csproj", "{BF04DB3C-C8DC-4588-ADB5-B440F80A9DA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BDOLife.Api", "BDOLifeApi\BDOLife.Api.csproj", "{BF04DB3C-C8DC-4588-ADB5-B440F80A9DA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Application", "BDOLifeApi.Application\BDOLife.Application.csproj", "{9FF145E8-5990-4780-B112-7BC7AB56D891}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BDOLife.Application", "BDOLifeApi.Application\BDOLife.Application.csproj", "{9FF145E8-5990-4780-B112-7BC7AB56D891}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Core", "BDOLifeApi.Core\BDOLife.Core.csproj", "{9FC43D96-496D-48C3-B09A-8CC55736C78F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BDOLife.Core", "BDOLifeApi.Core\BDOLife.Core.csproj", "{9FC43D96-496D-48C3-B09A-8CC55736C78F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Infra", "BDOLifeApi.Infra\BDOLife.Infra.csproj", "{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BDOLife.Infra", "BDOLifeApi.Infra\BDOLife.Infra.csproj", "{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BDOLife.Extractor", "BDOLife.Extractor\BDOLife.Extractor.csproj", "{82108EBE-FA3E-4FE0-BC16-2E47517371BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA1DB39F-F22A-40FB-92A8-EC6B272C226E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82108EBE-FA3E-4FE0-BC16-2E47517371BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82108EBE-FA3E-4FE0-BC16-2E47517371BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82108EBE-FA3E-4FE0-BC16-2E47517371BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82108EBE-FA3E-4FE0-BC16-2E47517371BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

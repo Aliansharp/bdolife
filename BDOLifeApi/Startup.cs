@@ -1,3 +1,4 @@
+using BDOLife.Application.Configurations.IoC;
 using BDOLife.Application.Tasks;
 using BDOLife.Core.Interfaces;
 using BDOLife.Core.Interfaces.Base;
@@ -35,7 +36,7 @@ namespace BDOLife
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            ConfigureBDOLifeApiServices(services);
+            IocConfiguration.ConfigureServices(services, Configuration);
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -72,13 +73,6 @@ namespace BDOLife
                 }
             });
 
-            scraperTask.Extract().Wait();
-            //scraperTask.ExtractBasicItems();
-            //scraperTask.ExtractProcessBDOCodex();
-            //scraperTask.ExtractRecipeProccess();
-
-            //scraperTask.ExtractRecipeFullBDOCodex();
-            //scraperTask.ExtractRecipeFull().Wait();
             //recurringJobManager.AddOrUpdate("ExtractBDOCodex", () => scraperTask.Extract(), Cron.Weekly(DayOfWeek.Thursday));
             //recurringJobManager.AddOrUpdate("ExtractRecipeCooking", () => scraperTask.ExtractRecipeCooking(), Cron.Monthly(1));
             //recurringJobManager.AddOrUpdate("ExtractRecipeAlchemy", () => scraperTask.ExtractRecipeAlchemy(), Cron.Monthly(1));
@@ -95,41 +89,6 @@ namespace BDOLife
                 endpoints.MapControllers();
                 endpoints.MapHangfireDashboard();
             });
-        }
-
-        private void ConfigureBDOLifeApiServices(IServiceCollection services)
-        {
-            ConfigureDatabases(services);
-
-            // Infrastructure Layer
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-            // Application Layer
-
-            // Repository Layer
-            services.AddScoped<IRecipeRepository, RecipeRepository>();
-            services.AddScoped<IItemRepository, ItemRepository>();
-            services.AddScoped<IMasteryCookingRepository, MasteryCookingRepository>();
-            services.AddScoped<IMasteryAlchemyRepository, MasteryAlchemyRepository>();
-            services.AddScoped<IMaterialGroupRepository, MaterialGroupRepository>();
-
-            ConfigureHangfire(services);
-        }
-
-        private void ConfigureDatabases(IServiceCollection services)
-        {
-            services.AddDbContext<DataContext>(c =>
-              c.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), x => x.MigrationsAssembly("BDOLife.Infra")));
-        }
-
-        private void ConfigureHangfire(IServiceCollection services)
-        {
-            services.AddScoped<ScraperTask>();
-            
-            services.AddHangfire(c => c.UseSqlServerStorage(Configuration.GetConnectionString("DefaultConnection")));
-            GlobalConfiguration.Configuration.UseSqlServerStorage(Configuration.GetConnectionString("DefaultConnection")).WithJobExpirationTimeout(TimeSpan.FromDays(7));
-
-            services.AddHangfireServer(a => a.WorkerCount = 1);
         }
     }
 }
